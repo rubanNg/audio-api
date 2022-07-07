@@ -7,7 +7,7 @@ import { LatestQuery } from "src/models/LatestQuery";
 
 @Injectable()
 export class UrlService {
-  private baseUrl = "https://akniga.org";
+  baseUrl = "https://akniga.org";
 
   buildLatestUrl({ type, page }: LatestQuery) {
 
@@ -64,6 +64,10 @@ export class UrlService {
 
   buildSearchUrl({page, value}: SearchQuery) {
     return `${this.baseUrl}/search/books/page${page}?q=${value}`;
+  }
+
+  buidlSeriesUrl(id: string) {
+    return `${this.baseUrl}/series/${id}`;
   }
 
 }

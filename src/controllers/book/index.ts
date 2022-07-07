@@ -25,6 +25,7 @@ export class BookController {
     const url = this.urlService.buildBookUrl(id);
     const book = await this.parseService.parseBook(url);
 
+
     if (!book) {
       throw new HttpException({
         error: {
@@ -41,8 +42,6 @@ export class BookController {
   @ApiNotFoundResponse({ description: "Not found", content: { "application/json": {} } })
   async stream(@Res() res: ServerResponse, @Headers() headers: any, @Param('streamConfig', ParseStreamInfoPipe) stream: StreamFileInfo)  {
 
-
-    console.log({ stream });
 
     if (!stream) throw new HttpException({
       error: {

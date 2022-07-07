@@ -8,7 +8,6 @@ export class BrowserService {
 
   async browser() {
     if (this._browser === null) {
-      console.log("WARN!! launch");
       this._browser = await puppeteer.launch();
     }
     return this._browser;

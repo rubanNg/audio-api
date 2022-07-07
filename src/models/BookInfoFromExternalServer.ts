@@ -1,8 +1,10 @@
+import { BookItemsFromExternalServer } from "./BookItemsFromExternalServer";
+
 export interface BookIInfoFromExternalServer {
   author: string;
   bStateError: boolean;
   bookurl: string;
-  items: string;
+  items: BookItemsFromExternalServer[];
   key: string;
   preview: string;
   sMsg: string;

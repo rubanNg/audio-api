@@ -1,5 +1,8 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, Param } from "@nestjs/common";
 import { ApiOkResponse, ApiParam, ApiTags } from "@nestjs/swagger";
+import { Books } from "src/models/Books";
+import { BooksSeries } from "src/models/BooksSeries";
+import { Response } from "src/models/Response";
 import { ParseService } from "src/services/parse.service";
 import { UrlService } from "src/services/url.service";
 
@@ -16,10 +19,11 @@ export class AdditionalsController {
     return await this.parseService.parseGenres(url);
   }
 
-  // @Get("book-by-subgenre/:subgenre")
-  // @ApiParam({ type: String, name: "subgenre", })
-  // @ApiOkResponse({ description: 'Get book by subgenre', content: {  "application/json": {} } })
-  // async getBySubGenre() {
-  //   return [];
-  // }
+
+  @Get("/series/:seriesId")
+  @ApiOkResponse({ description: 'Get series', content: { "application/json": {} } })
+  async sesries(@Param("seriesId") seriesId: string): Promise<Response<Books>> {
+    const url = this.urlService.buidlSeriesUrl(seriesId);
+    return await this.parseService.parseBooksList(url);
+  }
 }
