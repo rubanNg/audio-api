@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { parse as parseHtml, HTMLElement } from 'fast-html-parser';
-import { Book } from 'src/models/Book';
+import { AudioInfo, Book } from 'src/models/Book';
 import { Books } from 'src/models/Books';
 import { Pagination } from 'src/models/Pagination';
 import { BrowserService } from './browser.service';
@@ -18,7 +18,6 @@ export class ParseService {
 
   async parseBooksList(url: string) {
     const books: Books = []
-    console.log({ url })
     const html = await this.getPageHtml(url);
     const document = parseHtml(html);
     const elements = document.querySelectorAll(".content__main__articles--item");
@@ -29,7 +28,6 @@ export class ParseService {
         poster: query("img")?.attributes?.src,
         author: {
           name: query('.link__action a')?.text?.trim(),
-          id: '',
         },
         description: query('.description__article-main')?.lastChild?.text?.trim(),
         name: query("img")?.attributes?.alt?.trim(),
@@ -63,11 +61,13 @@ export class ParseService {
       genres: this.splitStringByDelimiter(document.querySelector(".section__title")?.text?.trim(), ","),
       author: {
         name: document.querySelector(".link__author span")?.text?.trim(),
-        id: "",
+        id: decodeURI(this.splitStringByDelimiter(document.querySelector(".link__author")?.attributes?.href, "/").pop()),
       },
       description: document.querySelector(".description__article-main")?.text?.trim(),
       name: document.querySelector(".caption__article-title")?.text?.trim(),
-      auidio: await this.getBookStreamsUrls(bookInfo)
+      auidio: await this.getBookStreams(bookInfo),
+      relatedBooks: this.getRelatedBooks(document),
+      series: this.getSeries(document)
     }
     return {
       data: book
@@ -128,19 +128,18 @@ export class ParseService {
     }
   }
 
-  private async getBookStreamsUrls(bookInfo:BookIInfoFromExternalServer & { bid: string }) {
+  private async getBookStreams(bookInfo: BookIInfoFromExternalServer & { bid: string }) {
     const items: BookItemsFromExternalServer[] = JSON.parse(bookInfo.items);
     const server = bookInfo.srv;
     const bookId = +bookInfo.bid;
     const key = bookInfo.key;
     const title = bookInfo.title;
-    const result: { title: string, stream: string }[] = [];
+    const result: AudioInfo[] = [];
     const filesIds = new Set<number>(items.map(s => s.file));
 
 
     for (const fileId of filesIds) {
       const itemsForId = items.filter(s => s.file == fileId);
-
       const fileUrl = encodeURI(`${server}b/${bookId}/${key}/0${fileId}. ${title}.mp3`);
 
       for (const item of itemsForId) {
@@ -160,7 +159,8 @@ export class ParseService {
 
         result.push({
           title: item.title,
-          stream: this.cryptoService.encodeToBase64(JSON.stringify(streamInfo))
+          streamConfig: this.cryptoService.encodeToBase64(streamInfo),
+          length: this.getDuration(item.duration),
         })
       }
     }
@@ -171,6 +171,19 @@ export class ParseService {
     return await axios.head(url).then(s => +s.headers['content-length']);
   }
 
+  private getDuration(duration: number) {
+
+    const seconds = duration % 60;
+    const minutes = Math.trunc(duration / 60 > 59 ?  (duration / 60) % 60 : (duration / 60));
+    const hours =  Math.trunc(duration / 60 > 59 ?  (duration / 60) / 60 : 0);
+
+    return {
+      hours,
+      minutes,
+      seconds
+    }
+  }
+
   private async isNotValidPage(url: string) {
     try {
       return (await axios.head(url)).status === 404;
@@ -178,4 +191,23 @@ export class ParseService {
       return true;
     }
   }
+
+  private getRelatedBooks(element: HTMLElement) {
+    return element.querySelectorAll('.content__main__book--item--series-list a').map(a => ({
+      id: this.splitStringByDelimiter(a.attributes.href, "/").pop(),
+      name: a?.text?.trim(),
+    }))
+  }
+
+  private getSeries(element: HTMLElement) {
+    const series = element.querySelector(".caption__article--about-block.about--series");
+
+    if (series) {
+      return {
+        id: decodeURI(this.splitStringByDelimiter(series.querySelector('.content__article--about-content a')?.attributes?.href, "/").pop()),
+        name: series.querySelector('.content__article--about-content span')?.text?.trim()
+      }
+    } else return null;
+  }
+
 }

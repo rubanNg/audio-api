@@ -7,7 +7,10 @@ export class BrowserService {
   private _browser: Browser = null;
 
   async browser() {
-    if (this._browser === null) this._browser = await puppeteer.launch();
+    if (this._browser === null) {
+      console.log("WARN!! launch");
+      this._browser = await puppeteer.launch();
+    }
     return this._browser;
   }
 
@@ -22,9 +25,9 @@ export class BrowserService {
             resolve({ html: await page.content(), response: await httpResponse.json() });
           }
         });
-        page.goto(url);
+        await page.goto(url, { waitUntil: ['domcontentloaded'] });
       } else {
-        page.goto(url);
+        await page.goto(url, { waitUntil: ['domcontentloaded'] });
         resolve({ html: await page.content(), response: null });
       }
     }).then(async response => {

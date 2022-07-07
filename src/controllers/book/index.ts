@@ -35,11 +35,14 @@ export class BookController {
     } else return book;
   }
 
-  @Get("book/audio/:stream")
-  @ApiParam({ type: String, name: "stream", })
+  @Get("book/audio/:streamConfig")
+  @ApiParam({ type: String, name: "stream configuration", })
   @ApiOkResponse({ description: 'Get book audio stream', content: { 'audio/mpeg': {} } })
   @ApiNotFoundResponse({ description: "Not found", content: { "application/json": {} } })
-  async stream(@Res() res: ServerResponse, @Headers() headers: any, @Param('stream', ParseStreamInfoPipe) stream: StreamFileInfo)  {
+  async stream(@Res() res: ServerResponse, @Headers() headers: any, @Param('streamConfig', ParseStreamInfoPipe) stream: StreamFileInfo)  {
+
+
+    console.log({ stream });
 
     if (!stream) throw new HttpException({
       error: {
