@@ -11,6 +11,7 @@ import { get } from 'request';
 import { StreamOffset } from 'src/models/StreamOffset';
 import { ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiParam, ApiProduces, ApiQuery, ApiTags, getSchemaPath } from '@nestjs/swagger';
 import { BookType } from 'src/models/enums/BookType';
+import axios from 'axios';
 
 
 @Controller("/api")
@@ -52,8 +53,8 @@ export class BookController {
 
 
     const url = await this.parseService.getAudioStreamUrl(stream);
-    const total = stream.fileBytes;
-    const bytesInOneSecond = stream.fileBytes / stream.fileLength;
+    const total = await axios.head(url).then(s => +s.headers['content-length']);
+    const bytesInOneSecond = total / stream.fileLength;
   
     const rangeFromHeader = headers.range;
 

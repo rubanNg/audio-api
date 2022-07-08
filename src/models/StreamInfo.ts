@@ -1,7 +1,6 @@
 export interface StreamFileInfo {
   bookId: number;
   fileLength: number;
-  fileBytes: number;
   order: number;
   start: number;
   finish: number;

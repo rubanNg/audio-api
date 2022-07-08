@@ -47,6 +47,8 @@ export class ParseService {
 
   async parseBook(url: string): Promise<Response<Partial<Book>>> {
 
+    const start = Date.now();
+
     if (await this.isNotValidPage(url)) {
       return null;
     }
@@ -59,8 +61,9 @@ export class ParseService {
       return null;
     }
 
-    const { headers: { "set-cookie": cookie }, data } = await this.loadPage(url);
-    const html = data;
+
+    const { headers: { "set-cookie": cookie }, data: html } = await this.loadPage(url);
+    console.log("HTML TIME: ", Date.now() - start);
     const hash = this.cryptoService.encryptHash(LIVESTREET_SECURITY_KEY(html));
     const document = parseHtml(html);
     const bookId = document.querySelector(".ls-topic")?.attributes?.['data-bid'];
@@ -94,6 +97,7 @@ export class ParseService {
       series: this.getSeries(document)
     }
 
+    console.log("TIME: ", Date.now() - start);
     return {
       data: book
     };
@@ -169,7 +173,6 @@ export class ParseService {
 
     for (const fileId of filesIds) {
       const itemsForId = items.filter(s => s.file == fileId);
-      const fileUrl = encodeURI(`${server}b/${bookId}/${key}/0${fileId}. ${title}.mp3`);
 
       for (const item of itemsForId) {
 
@@ -177,7 +180,6 @@ export class ParseService {
         streamInfo.fileLength = 0;
         streamInfo.bookId = bookId,
         streamInfo.fileLength = itemsForId.reduce((p, n) => p + n.duration, 0);
-        streamInfo.fileBytes = await this.getContentLength(fileUrl);
         streamInfo.order = fileId;
         streamInfo.start = item.time_from_start;
         streamInfo.finish = item.time_finish;
@@ -194,10 +196,6 @@ export class ParseService {
       }
     }
     return result;
-  }
-
-  private async getContentLength(url: string) {
-    return await axios.head(url).then(s => +s.headers['content-length']);
   }
 
   private getDuration(duration: number) {
