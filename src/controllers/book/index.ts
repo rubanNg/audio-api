@@ -52,7 +52,7 @@ export class BookController {
     }, HttpStatus.NOT_FOUND);
 
 
-    const url = await this.parseService.getAudioStreamUrl(stream);
+    const url = await this.parseService.getAudioFileUrl(stream);
     const total = await axios.head(url).then(s => +s.headers['content-length']);
     const bytesInOneSecond = total / stream.fileLength;
   

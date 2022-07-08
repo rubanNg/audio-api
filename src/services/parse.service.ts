@@ -127,7 +127,7 @@ export class ParseService {
     return result;
   }
 
-  async getAudioStreamUrl(info: StreamFileInfo) {
+  async getAudioFileUrl(info: StreamFileInfo) {
     const order = info.order <= 9 ? `0${info.order}`: info.order;
     return encodeURI(`${info.server}/b/${info.bookId}/${info.key}/${order}. ${info.title}.mp3`);
 
