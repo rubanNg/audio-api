@@ -37,11 +37,18 @@ export class BookController {
     } else return book;
   }
 
-  @Get("book/audio/:streamConfig")
-  @ApiParam({ type: String, name: "stream configuration", })
+  @Get("audio")
   @ApiOkResponse({ description: 'Get book audio stream', content: { 'audio/mpeg': {} } })
   @ApiNotFoundResponse({ description: "Not found", content: { "application/json": {} } })
-  async stream(@Res() res: ServerResponse, @Headers() headers: any, @Param('streamConfig', ParseStreamInfoPipe) stream: StreamFileInfo)  {
+  @ApiQuery({ name: "bookId", type: Number, required: true })
+  @ApiQuery({ name: "order",  type: Number, required: true,  })
+  @ApiQuery({ name: "start", type: Number, required: true })
+  @ApiQuery({ name: "finish", type: Number, required: true })
+  @ApiQuery({ name: "duration", type: Number, required: true })
+  @ApiQuery({ name: "key", type: String, required: true  })
+  @ApiQuery({ name: "server", type: String, required: true })
+  @ApiQuery({ name: "title", type: String, required: true })
+  async stream(@Res() res: ServerResponse, @Headers() headers: any, @Query(ParseStreamInfoPipe) stream: StreamFileInfo)  {
 
 
     if (!stream) throw new HttpException({
@@ -51,35 +58,46 @@ export class BookController {
       }
     }, HttpStatus.NOT_FOUND);
 
+    const {
+      order,
+      server,
+      bookId,
+      key,
+      title,
+      start,
+      finish,
+      fileLength
+    } = stream;
 
-    const url = await this.parseService.getAudioFileUrl(stream);
+    const fileOrder = order <= 9 ? `0${order}`: order;
+    const url = encodeURI(`${server}/b/${bookId}/${key}/${fileOrder}. ${title}.mp3`);
     const total = await axios.head(url).then(s => +s.headers['content-length']);
-    const bytesInOneSecond = total / stream.fileLength;
+    const bytesInOneSecond = total / fileLength;
   
     const rangeFromHeader = headers.range;
 
     if (rangeFromHeader) {;
       const parts = rangeFromHeader.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0], 10);
+      const headerStart = parseInt(parts[0], 10);
 
       // + 1 к результату потомучто при сложении может получится ноль
-      const streamStart = Math.trunc(stream.start * bytesInOneSecond);
-      const streamEnd = Math.trunc(stream.finish * bytesInOneSecond) - 1;
-      const streamToltal = Math.trunc((stream.finish * bytesInOneSecond));
+      const streamStart = Math.trunc(start * bytesInOneSecond);
+      const streamEnd = Math.trunc(finish * bytesInOneSecond) - 1;
+      const streamToltal = Math.trunc((finish * bytesInOneSecond));
       const streamChunkSize = (streamEnd - streamStart);
 
       const offset: StreamOffset = {
-        start: streamStart + start + 1,
+        start: streamStart + headerStart + 1,
         end: streamEnd,
         total: streamToltal,
-        chunksize: streamChunkSize + start + 1
+        chunksize: streamChunkSize + headerStart + 1
       }
 
       const rangeHeaders = {
         range: `bytes=${offset.start}-${offset.end}`
       }
       get(url, { headers: rangeHeaders }).pipe(
-        res.writeHead(206, this.getHeaders(start, offset))
+        res.writeHead(206, this.getHeaders(headerStart, offset))
       );
 
     } else {

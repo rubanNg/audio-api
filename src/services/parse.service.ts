@@ -47,8 +47,6 @@ export class ParseService {
 
   async parseBook(url: string): Promise<Response<Partial<Book>>> {
 
-    const start = Date.now();
-
     if (await this.isNotValidPage(url)) {
       return null;
     }
@@ -63,7 +61,6 @@ export class ParseService {
 
 
     const { headers: { "set-cookie": cookie }, data: html } = await this.loadPage(url);
-    console.log("HTML TIME: ", Date.now() - start);
     const hash = this.cryptoService.encryptHash(LIVESTREET_SECURITY_KEY(html));
     const document = parseHtml(html);
     const bookId = document.querySelector(".ls-topic")?.attributes?.['data-bid'];
@@ -97,7 +94,6 @@ export class ParseService {
       series: this.getSeries(document)
     }
 
-    console.log("TIME: ", Date.now() - start);
     return {
       data: book
     };
@@ -127,11 +123,6 @@ export class ParseService {
     return result;
   }
 
-  async getAudioFileUrl(info: StreamFileInfo) {
-    const order = info.order <= 9 ? `0${info.order}`: info.order;
-    return encodeURI(`${info.server}/b/${info.bookId}/${info.key}/${order}. ${info.title}.mp3`);
-
-  }
 
   private async loadPage(url: string) {
     const headers = {
@@ -170,7 +161,6 @@ export class ParseService {
     const result: AudioInfo[] = [];
     const filesIds = new Set<number>(items.map(s => s.file));
 
-
     for (const fileId of filesIds) {
       const itemsForId = items.filter(s => s.file == fileId);
 
@@ -188,9 +178,11 @@ export class ParseService {
         streamInfo.server = server;
         streamInfo.title = encodeURI(title);
 
+        const stream = new URLSearchParams(streamInfo as {}).toString();
+
         result.push({
           title: item.title,
-          streamConfig: this.cryptoService.encodeToBase64(streamInfo),
+          audio : `/api/audio?${stream}`,
           length: this.getDuration(item.duration),
         })
       }

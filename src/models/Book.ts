@@ -14,7 +14,7 @@ interface Base {
 
 export interface AudioInfo {
   title: string;
-  streamConfig: string;
+  audio: string;
   length: {
     hours: number;
     minutes: number;

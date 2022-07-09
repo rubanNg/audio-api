@@ -7,13 +7,8 @@ export class ParseStreamInfoPipe implements PipeTransform {
 
   constructor( private cryptoService: CryptoService) {}
 
-  transform(value: string, metadata: ArgumentMetadata): StreamFileInfo {
-    try {
-      const data = JSON.parse(this.cryptoService.decodeFromBase64(value)) as StreamFileInfo;
-      data.title = decodeURI(data.title);
-      return data;
-    } catch {
-      return null
-    }
+  transform(streamFileInfo: StreamFileInfo, metadata: ArgumentMetadata): StreamFileInfo {
+    for (const key in streamFileInfo) if (!streamFileInfo[key]) return null;
+    return streamFileInfo;
   }
 }
