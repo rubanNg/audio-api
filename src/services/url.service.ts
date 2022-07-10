@@ -66,8 +66,13 @@ export class UrlService {
     return `${this.baseUrl}/search/books/page${page}?q=${value}`;
   }
 
-  buidlSeriesUrl(id: string) {
+  buidlSerieUrl(id: string) {
     return `${this.baseUrl}/series/${id}`;
+  }
+
+  buildAuthorsUrl(prefix: string = null) {
+    if (prefix) return `${this.baseUrl}/authors/?prefix=${encodeURI(prefix)}`;
+    return `${this.baseUrl}/authors`;
   }
 
 }

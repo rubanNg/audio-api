@@ -7,5 +7,5 @@ export interface StreamFileInfo {
   duration: number;
   key: string;
   server: string;
-  title: string
+  title: string,
 }

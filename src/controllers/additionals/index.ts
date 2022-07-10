@@ -1,19 +1,19 @@
-import { Controller, Get, Param } from "@nestjs/common";
-import { ApiOkResponse, ApiParam, ApiTags } from "@nestjs/swagger";
+import { Controller, Get, Param, Query } from "@nestjs/common";
+import { ApiOkResponse, ApiParam, ApiQuery, ApiTags } from "@nestjs/swagger";
 import { Books } from "src/models/Books";
 import { BooksSeries } from "src/models/BooksSeries";
 import { Response } from "src/models/Response";
 import { ParseService } from "src/services/parse.service";
 import { UrlService } from "src/services/url.service";
 
-@Controller("/api")
+@Controller("/api/additionals")
 @ApiTags('Additionals')
 export class AdditionalsController {
   constructor(private parseService: ParseService, private urlService: UrlService) {}
 
 
-  @Get("/genres-list")
-  @ApiOkResponse({ description: 'Get genres', content: { "application/json": {} } })
+  @Get("/genres")
+  @ApiOkResponse({ description: 'genres list', content: { "application/json": {} } })
   async genres() {
     const url = this.urlService.buildAdditionalsUrls().genres;
     return await this.parseService.parseGenres(url);
@@ -21,9 +21,30 @@ export class AdditionalsController {
 
 
   @Get("/series/:seriesId")
-  @ApiOkResponse({ description: 'Get series', content: { "application/json": {} } })
-  async sesries(@Param("seriesId") seriesId: string): Promise<Response<Books>> {
-    const url = this.urlService.buidlSeriesUrl(seriesId);
+  @ApiOkResponse({ description: 'Series by id', content: { "application/json": {} } })
+  async sesrie(@Param("seriesId") seriesId: string): Promise<Response<Books>> {
+    const url = this.urlService.buidlSerieUrl(seriesId);
     return await this.parseService.parseBooksList(url);
+  }
+
+  @Get("/author-prefixes")
+  @ApiOkResponse({ description: 'Author prefixes', content: { "application/json": {} } })
+  async prefexies(): Promise<string[]> {
+    const url = this.urlService.buildAuthorsUrl();
+    return this.parseService.parseAuthorPrefixes(url)
+  }
+
+  @Get("/authors")
+  @ApiOkResponse({ description: 'Author by prefix or search string', content: { "application/json": {} } })
+  @ApiQuery({ name: "prefix", required: false, type: String, description: "" })
+  @ApiQuery({ 
+    name: "search-string", 
+    required: false, 
+    type: String, 
+    description: "if the search string has a value, then the prefix is ignored" 
+  })
+  async author(@Query("prefix") prefix: string, @Query("search-string") searchString: string) {
+    const url = this.urlService.buildAuthorsUrl(prefix);
+    return await this.parseService.parseAuthorsList(url, searchString);
   }
 }

@@ -15,6 +15,13 @@ import { UrlService } from './url.service';
 @Injectable()
 export class ParseService {
 
+
+  private headers = {
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36',
+    'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'cookie': null
+  };
+
   constructor(private cryptoService: CryptoService, private urlService: UrlService) {}
 
   async parseBooksList(url: string) {
@@ -51,33 +58,24 @@ export class ParseService {
       return null;
     }
 
-
-    function LIVESTREET_SECURITY_KEY(htmlBody: string) {
-      const regex = /,LIVESTREET_SECURITY_KEY\s?=\s?'(.*)',LANGUAGE/;
-      const match = htmlBody.match(regex);
-      if (match && match.length > 1) return match[1];
-      return null;
-    }
-
-
     const { headers: { "set-cookie": cookie }, data: html } = await this.loadPage(url);
-    const hash = this.cryptoService.encryptHash(LIVESTREET_SECURITY_KEY(html));
+    const hash = this.cryptoService.encryptHash(this.secutiryKey(html));
     const document = parseHtml(html);
     const bookId = document.querySelector(".ls-topic")?.attributes?.['data-bid'];
 
     const headers = {
-      'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36',
-      'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      ...this.headers,
       'cookie': cookie[0]
-    };
+    }
 
-    const body = `bid=${bookId}&hash=${hash}&security_ls_key=${LIVESTREET_SECURITY_KEY(html)}`;
+    const body = `bid=${bookId}&hash=${hash}&security_ls_key=${this.secutiryKey(html)}`;
     const dataFromServer = (await axios.post(`${this.urlService.baseUrl}/ajax/b/${bookId}`, body, { headers })).data;
 
     const bookInfo = {
       ...dataFromServer,
       bid: bookId,
-      items: JSON.parse(dataFromServer.items)
+      items: JSON.parse(dataFromServer.items),
+      stringBookId: this.splitStringByDelimiter(dataFromServer.bookurl, "/").pop(),
     };
 
     const book: Partial<Book> = {
@@ -99,6 +97,40 @@ export class ParseService {
     };
   }
 
+  async parseAuthorsList(url: string, searchString: string = null) {
+    
+    const getHtml = (html: string)  => {
+      const document = parseHtml(html);
+      const rows = document.querySelectorAll('tr');
+
+      return rows.map(item => {
+        return {
+          name: item.querySelector("td h4 a")?.text?.trim(),
+          id: this.splitStringByDelimiter(item.querySelector("h4 a").attributes.href, "/").pop(),
+          booksCount: this.splitStringByDelimiter(item.querySelector("td .description")?.text, " ")?.shift()?.trim(),
+        }
+      });
+    }
+
+    if (searchString) {
+      
+      const { data: html, headers: { "set-cookie": cookie } } = await this.loadPage(decodeURI(url));
+
+      const headers = {
+        ...this.headers,
+        'cookie': cookie[0]
+      }
+      
+      const body = `sText=${searchString}&isPrefix=${0}&security_ls_key=${this.secutiryKey(html)}`;
+      const searchResult = (await axios.post(`${this.urlService.baseUrl}/authors/ajax-search`, body, { headers })).data;
+      return getHtml(searchResult.html);
+
+    } else {
+      const { data: html } = await this.loadPage(decodeURI(url));
+      return getHtml(html);
+    }
+  }
+  
   async parseGenres(url: string) {
 
     const { data: html } = await this.loadPage(url);
@@ -123,6 +155,21 @@ export class ParseService {
     return result;
   }
 
+  async parseAuthorPrefixes(url: string) {
+    const { data: html } = await this.loadPage(url);
+    const document = parseHtml(html);
+    const list = document.querySelectorAll('#author-prefix-filter li a');
+
+    return list.map(s => s?.text?.trim());
+  }
+
+
+  private secutiryKey(htmlBody: string) {
+    const regex = /,LIVESTREET_SECURITY_KEY\s?=\s?'(.*)',LANGUAGE/;
+    const match = htmlBody.match(regex);
+    if (match && match.length > 1) return match[1];
+    return null;
+  }
 
   private async loadPage(url: string) {
     const headers = {
@@ -152,7 +199,8 @@ export class ParseService {
     }
   }
 
-  private async getBookStreams(bookInfo: BookIInfoFromExternalServer & { bid: string }) {
+  private async getBookStreams(bookInfo: BookIInfoFromExternalServer & { bid: string, stringBookId: string; }) {
+
     const items = bookInfo.items;
     const server = bookInfo.srv;
     const bookId = +bookInfo.bid;
@@ -182,7 +230,7 @@ export class ParseService {
 
         result.push({
           title: item.title,
-          audio : `/api/audio?${stream}`,
+          audio : `/api/books/${bookInfo.stringBookId}/audio?${stream}`,
           length: this.getDuration(item.duration),
         })
       }

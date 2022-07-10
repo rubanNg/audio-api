@@ -3,12 +3,18 @@ import { StreamFileInfo } from 'src/models/StreamInfo';
 import { CryptoService } from 'src/services/crypto.service';
 
 @Injectable()
-export class ParseStreamInfoPipe implements PipeTransform {
+export class ValidateStreamInfoPipe implements PipeTransform {
 
   constructor( private cryptoService: CryptoService) {}
 
   transform(streamFileInfo: StreamFileInfo, metadata: ArgumentMetadata): StreamFileInfo {
-    for (const key in streamFileInfo) if (!streamFileInfo[key]) return null;
+
+    if (Object.keys(streamFileInfo).length === 0) return null;
+
+    for (const key in streamFileInfo) {
+      const value = streamFileInfo[key];
+      if (value === undefined || value === null) return null;
+    }
     return streamFileInfo;
   }
 }

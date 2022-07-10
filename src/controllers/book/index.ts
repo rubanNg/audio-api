@@ -2,7 +2,7 @@ import { Controller, Get, Headers, HttpException, HttpStatus, Param, Query, Res 
 import { Response as ServerResponse } from 'express';
 import { Book } from 'src/models/Book';
 import { StreamFileInfo } from 'src/models/StreamInfo';
-import { ParseStreamInfoPipe } from 'src/pipes/parse-stream-info.pipe';
+import { ValidateStreamInfoPipe } from 'src/pipes/validate-stream-info.pipe';
 import { Response } from '../../models/Response';
 import { Response as Fuck } from '../../models/Response';
 import { ParseService } from '../../services/parse.service';
@@ -14,14 +14,14 @@ import { BookType } from 'src/models/enums/BookType';
 import axios from 'axios';
 
 
-@Controller("/api")
+@Controller("/api/books")
 @ApiTags('Book')
 export class BookController {
   constructor(private parseService: ParseService, private urlService: UrlService) {}
 
   @ApiParam({ type: String, name: "id" })
   @ApiOkResponse({ description: 'Get book information by id', content: { "application/json": {} } })
-  @Get("book/:id")
+  @Get("/:id")
   async bookInfo(@Param("id") id: string): Promise<Response<Partial<Book>>> {
     const url = this.urlService.buildBookUrl(id);
     const book = await this.parseService.parseBook(url);
@@ -37,7 +37,7 @@ export class BookController {
     } else return book;
   }
 
-  @Get("audio")
+  @Get("/:id/audio")
   @ApiOkResponse({ description: 'Get book audio stream', content: { 'audio/mpeg': {} } })
   @ApiNotFoundResponse({ description: "Not found", content: { "application/json": {} } })
   @ApiQuery({ name: "bookId", type: Number, required: true })
@@ -48,8 +48,7 @@ export class BookController {
   @ApiQuery({ name: "key", type: String, required: true  })
   @ApiQuery({ name: "server", type: String, required: true })
   @ApiQuery({ name: "title", type: String, required: true })
-  async stream(@Res() res: ServerResponse, @Headers() headers: any, @Query(ParseStreamInfoPipe) stream: StreamFileInfo)  {
-
+  async stream(@Res() res: ServerResponse, @Headers() headers: any, @Query(ValidateStreamInfoPipe) stream: StreamFileInfo)  {
 
     if (!stream) throw new HttpException({
       error: {
@@ -74,7 +73,7 @@ export class BookController {
     const total = await axios.head(url).then(s => +s.headers['content-length']);
     const bytesInOneSecond = total / fileLength;
   
-    const rangeFromHeader = headers.range;
+    const rangeFromHeader: string = headers.range;
 
     if (rangeFromHeader) {;
       const parts = rangeFromHeader.replace(/bytes=/, "").split("-");

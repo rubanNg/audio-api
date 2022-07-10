@@ -9,12 +9,12 @@ import { ParseService } from "src/services/parse.service";
 import { UrlService } from "src/services/url.service";
 import { Response } from '../../models/Response';
 
-@Controller("/api")
+@Controller("/api/top")
 @ApiTags("Top")
 export class TopController {
   constructor(private parseService: ParseService, private urlService: UrlService) {}
 
-  @Get("/top")
+  @Get("/")
   @ApiQuery({ name: "page", type: Number, required: false })
   @ApiQuery({ name: "period", required: false, enum: Period,  })
   @ApiQuery({ name: "genre", type: String, required: false })

@@ -8,13 +8,13 @@ import { Response } from '../../models/Response';
 import { ParseService } from '../../services/parse.service';
 import { UrlService } from '../../services/url.service';
 
-@Controller("/api")
+@Controller("/api/latest")
 @ApiTags("Latest")
 export class LatestController {
   constructor(private parseService: ParseService, private urlService: UrlService) {}
 
 
-  @Get("latest")
+  @Get("/")
   @ApiQuery({ name: "page", type: Number, required: false })
   @ApiQuery({ name: "type", required: false, enum: BookType,  })
   async latest(@Query(ParseLatestQuryPipe) query: LatestQuery): Promise<Response<Books>> {
