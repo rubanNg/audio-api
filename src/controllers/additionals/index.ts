@@ -13,7 +13,7 @@ export class AdditionalsController {
 
 
   @Get("/genres")
-  @ApiOkResponse({ description: 'genres list', content: { "application/json": {} } })
+  @ApiOkResponse({ description: 'Genres list', content: { "application/json": {} } })
   async genres() {
     const url = this.urlService.buildAdditionalsUrls().genres;
     return await this.parseService.parseGenres(url);
@@ -36,7 +36,7 @@ export class AdditionalsController {
 
   @Get("/authors")
   @ApiOkResponse({ description: 'Author by prefix or search string', content: { "application/json": {} } })
-  @ApiQuery({ name: "prefix", required: false, type: String, description: "" })
+  @ApiQuery({ name: "prefix", required: false, type: String, description: "author prefix" })
   @ApiQuery({ 
     name: "search-string", 
     required: false, 
