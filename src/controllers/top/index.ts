@@ -2,7 +2,7 @@ import { Controller, Get, Query } from "@nestjs/common";
 import { ApiQuery, ApiTags } from "@nestjs/swagger";
 import { Books } from "src/models/Books";
 import { BookType } from "src/models/enums/BookType";
-import { Period } from "src/models/Period";
+import { Period } from "src/models/enums/Period";
 import { TopBooksQuery } from "src/models/TopBooksQuery";
 import { ParseTopBooksQueryPipe } from "src/pipes/parse-top-books-query.pipe";
 import { ParseService } from "src/services/parse.service";

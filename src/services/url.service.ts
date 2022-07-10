@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { BookType } from "src/models/enums/BookType";
 import { TopBooksQuery } from "src/models/TopBooksQuery";
-import { Period } from "src/models/Period";
+import { Period } from "src/models/enums/Period";
 import { SearchQuery } from "src/models/SearchQuery";
 import { LatestQuery } from "src/models/LatestQuery";
 

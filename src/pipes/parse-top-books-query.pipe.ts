@@ -1,6 +1,6 @@
 import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common';
 import { TopBooksQuery } from 'src/models/TopBooksQuery';
-import { Period } from 'src/models/Period';
+import { Period } from 'src/models/enums/Period';
 
 @Injectable()
 export class ParseTopBooksQueryPipe implements PipeTransform {

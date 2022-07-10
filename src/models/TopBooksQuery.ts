@@ -1,5 +1,5 @@
 import { BookType } from "./enums/BookType";
-import { Period } from "./Period";
+import { Period } from "./enums/Period";
 
 export interface TopBooksQuery{
   page: number, 
