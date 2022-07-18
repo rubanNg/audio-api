@@ -7,12 +7,12 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
 
-  const app =  await NestFactory.create<NestExpressApplication>(MainModule, {
+  const app =  process.env.NODE_ENV === "development" ?  await NestFactory.create<NestExpressApplication>(MainModule, {
     httpsOptions: {
       key: readFileSync(join(__dirname, "../public/ssl/key.pem")),
       cert: readFileSync(join(__dirname, "../public/ssl/certificate.pem")),
     }
-  });
+  }) : await NestFactory.create<NestExpressApplication>(MainModule);
 
   const config = new DocumentBuilder().setTitle('Books').setVersion('1.0').build();
   const document = SwaggerModule.createDocument(app, config);
@@ -26,7 +26,7 @@ async function bootstrap() {
   
   
   await app.listen(process.env.PORT || 8080, host, () => {
-    console.log(`=> started on https://${host}:${process.env.PORT || 8080}`)
+    console.log(`=> started on ${host}:${process.env.PORT || 8080}`)
   });
 }
 bootstrap();
