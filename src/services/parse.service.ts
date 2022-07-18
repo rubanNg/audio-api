@@ -4,7 +4,6 @@ import { parse as parseHtml, HTMLElement } from 'fast-html-parser';
 import { AudioInfo, Book } from 'src/models/Book';
 import { Books } from 'src/models/Books';
 import { Pagination } from 'src/models/Pagination';
-import { BrowserService } from './browser.service';
 import { StreamFileInfo } from 'src/models/StreamInfo';
 import { CryptoService } from './crypto.service';
 import { BookIInfoFromExternalServer } from 'src/models/BookInfoFromExternalServer';
