@@ -22,8 +22,9 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setViewEngine('html');
   
+  
   await app.listen(process.env.PORT || 8080, () => {
-    console.log(`=> started on https://localhost:5000`)
+    console.log(`=> started on https://localhost:${process.env.PORT || 8080}`)
   });
 }
 bootstrap();
