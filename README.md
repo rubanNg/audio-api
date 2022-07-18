@@ -4,7 +4,7 @@
 
 
 
-<p align="center">Сайт<a href="https://audio-api-x.herokuapp.com/swagger/>https://akniga.org/</a></p>
+<p align="center"<a href="https://audio-api-x.herokuapp.com/swagger/>>Сайт</a></p>
 
 
 
