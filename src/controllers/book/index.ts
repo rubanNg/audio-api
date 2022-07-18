@@ -72,7 +72,6 @@ export class BookController {
     const url = encodeURI(`${server}/b/${bookId}/${key}/${fileOrder}. ${title}.mp3`);
     const total = await axios.head(url).then(s => +s.headers['content-length']);
     const bytesInOneSecond = total / fileLength;
-  
     const rangeFromHeader: string = headers.range;
 
     if (rangeFromHeader) {;
